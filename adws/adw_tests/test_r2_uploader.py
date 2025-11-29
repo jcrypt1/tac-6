@@ -104,7 +104,7 @@ def test_r2_upload():
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     object_key = f"adw/test/r2_upload_test_{timestamp}_bg.png"
 
-    public_url = uploader.upload_file(str(test_file), object_key)
+    public_url = uploader.upload_file(str(full_path), object_key)
 
     if not public_url:
         print("❌ Upload failed! Check the logs above for details.")
@@ -136,9 +136,8 @@ def test_r2_upload():
     print(f"\n5️⃣ Testing batch upload with multiple paths...")
 
     test_screenshots = [
-        test_file,  # This should work
+        str(full_path),  # Absolute path should work
         "nonexistent/file.png",  # This should fail gracefully
-        full_path.as_posix(),  # Absolute path should work
     ]
 
     url_mapping = uploader.upload_screenshots(test_screenshots, "test_adw_id")
