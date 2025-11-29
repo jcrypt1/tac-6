@@ -24,6 +24,9 @@ REQUIREMENTS FOR SUCCESS:
 1. Always use stdin=subprocess.DEVNULL (Python) or < /dev/null (Bash)
 2. Use -p flag for non-interactive prompt mode
 3. Use --dangerously-skip-permissions to avoid permission prompts
+   NOTE: This flag is appropriate here because E2B sandboxes are isolated environments
+   without access to the project's settings.json. For local execution, prefer using
+   --allowedTools with permissions from .claude/settings.json instead.
 4. Use full path to claude binary (e.g., ~/.npm-global/bin/claude)
 """
 
