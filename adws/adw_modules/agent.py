@@ -6,6 +6,7 @@ import os
 import json
 import re
 import logging
+from pathlib import Path
 from typing import Optional, List, Dict, Any, Tuple, Final
 from dotenv import load_dotenv
 from .data_types import (
@@ -21,6 +22,31 @@ load_dotenv()
 
 # Get Claude Code CLI path from environment
 CLAUDE_PATH = os.getenv("CLAUDE_CODE_PATH", "claude")
+
+
+def get_allowed_tools_from_settings() -> List[str]:
+    """Load allowed tools from .claude/settings.json.
+
+    Returns:
+        List of allowed tool patterns from settings.json
+    """
+    # Find project root (parent of adws directory)
+    project_root = Path(__file__).parent.parent.parent
+    settings_path = project_root / ".claude" / "settings.json"
+
+    if not settings_path.exists():
+        print(f"Warning: Settings file not found at {settings_path}", file=sys.stderr)
+        return []
+
+    try:
+        with open(settings_path, "r") as f:
+            settings = json.load(f)
+
+        allowed = settings.get("permissions", {}).get("allow", [])
+        return allowed
+    except Exception as e:
+        print(f"Warning: Failed to load settings: {e}", file=sys.stderr)
+        return []
 
 # Model selection mapping for slash commands
 # Maps slash command to preferred model
@@ -194,9 +220,10 @@ def prompt_claude_code(request: AgentPromptRequest) -> AgentPromptResponse:
     cmd.extend(["--output-format", "stream-json"])
     cmd.append("--verbose")
 
-    # Add dangerous skip permissions flag if enabled
-    if request.dangerously_skip_permissions:
-        cmd.append("--dangerously-skip-permissions")
+    # Add allowed tools from settings.json instead of dangerously-skip-permissions
+    allowed_tools = get_allowed_tools_from_settings()
+    if allowed_tools:
+        cmd.extend(["--allowedTools", ",".join(allowed_tools)])
 
     # Set up environment with only required variables
     env = get_claude_env()
@@ -286,12 +313,13 @@ def execute_template(request: AgentTemplateRequest) -> AgentPromptResponse:
     output_file = os.path.join(output_dir, "raw_output.jsonl")
 
     # Create prompt request with specific parameters
+    # Note: dangerously_skip_permissions is no longer used - allowed tools come from settings.json
     prompt_request = AgentPromptRequest(
         prompt=prompt,
         adw_id=request.adw_id,
         agent_name=request.agent_name,
         model=request.model,
-        dangerously_skip_permissions=True,
+        dangerously_skip_permissions=False,
         output_file=output_file,
     )
 

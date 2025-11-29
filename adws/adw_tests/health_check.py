@@ -39,6 +39,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 # Import git repo functions from github module
 from adw_modules.github import get_repo_url, extract_repo_path, make_issue_comment
 from adw_modules.utils import get_safe_subprocess_env
+from adw_modules.agent import get_allowed_tools_from_settings
 
 # Load environment variables
 load_dotenv()
@@ -170,7 +171,7 @@ def check_claude_code() -> CheckResult:
         ) as tmp:
             output_file = tmp.name
 
-        # Run Claude Code
+        # Run Claude Code with allowed tools from settings.json
         cmd = [
             claude_path,
             "-p",
@@ -180,8 +181,12 @@ def check_claude_code() -> CheckResult:
             "--output-format",
             "stream-json",
             "--verbose",
-            "--dangerously-skip-permissions",
         ]
+
+        # Add allowed tools from settings.json instead of dangerously-skip-permissions
+        allowed_tools = get_allowed_tools_from_settings()
+        if allowed_tools:
+            cmd.extend(["--allowedTools", ",".join(allowed_tools)])
 
         with open(output_file, "w") as f:
             result = subprocess.run(

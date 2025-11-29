@@ -77,7 +77,7 @@ class GitHubMilestone(BaseModel):
 class GitHubComment(BaseModel):
     """GitHub comment model."""
 
-    id: str
+    id: Optional[str] = None  # Not always returned by gh CLI
     author: GitHubUser
     body: str
     created_at: datetime = Field(alias="createdAt")
@@ -128,7 +128,7 @@ class AgentPromptRequest(BaseModel):
     adw_id: str
     agent_name: str = "ops"
     model: Literal["sonnet", "opus"] = "sonnet"
-    dangerously_skip_permissions: bool = False
+    dangerously_skip_permissions: bool = False  # Deprecated: allowed tools now come from settings.json
     output_file: str
 
 
